@@ -19,7 +19,7 @@ from setuptools import setup, find_packages
 
 requires = ['slave']
 
-desc = ('An implementation of the ADL x.547 RS232 interface, Revision 1.0')
+desc = ('An implementation of the Trinamic PD-110 interface')
 
 setup(
     name='trinamic_pd110',
@@ -27,7 +27,7 @@ setup(
     author='Alexander Book',
     author_email='alexander.book@frm2.tum.de',
     license = 'GNU General Public License (GPL), Version 3',
-    url='https://github.com/TUM-E21-ThinFilms/',
+    url='https://github.com/TUM-E21-ThinFilms/Trinamic-PD110/',
     description=desc,
     long_description=open('README.md').read(),
     packages=find_packages(),
