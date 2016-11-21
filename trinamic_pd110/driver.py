@@ -1,15 +1,17 @@
 from slave.driver import Driver, Command
 from slave.types import Integer
 import time
-from protocol import TrinamicProtocol
+from protocol import TrinamicPD110Protocol
 
-class ShutterDriver(Driver):
+from messages.mvp import MVPMessage
+
+class TrinamicPD110Driver(Driver):
 
     def __init__(self, transport, protocol=None):
         if protocol is None:
-            protocol = TrinamicProtocol()
+            protocol = TrinamicPD110Protocol()
 
-        super(ShutterDriver, self).__init__(transport, protocol)
+        super(TrinamicPD110Driver, self).__init__(transport, protocol)
 
         # Commands:
 
@@ -40,7 +42,15 @@ class ShutterDriver(Driver):
             Integer
         )
 
+    def _query(self, message):
+        return self._protocol.query(self._transport, message)
+
         # Functions:
+    def move_rel(self, value):
+        msg = MVPMessage()
+        msg.set_type(MVPMessage.TYPE_RELATIVE)
+        msg.set_value(value)
+        return self._query(msg)
 
     def move_right(self, value):  # max_value = 500
         cmd = [1, 0, 0], Integer  # first entry: Instruction number, second entry: Type; third entry: Motor/Bank

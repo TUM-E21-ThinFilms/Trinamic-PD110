@@ -13,24 +13,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+from trinamic_pd110.message import AbstractMessage
 
-from setuptools import setup, find_packages
+class MVPMessage(AbstractMessage):
+    TYPE_ABSOLUTE = 'ABS'
+    TYPE_RELATIVE = 'REL'
+    TYPE_COORDINATE = 'COORD'
 
-requires = ['slave']
+    def initialize(self):
+        self._msg.set_instruction('MVP')
+        self._msg.set_type(self.TYPE_ABSOLUTE)
 
-desc = ('An implementation of the serial interface Trinamic PD-110 / TMCM-110')
+    def set_type(self, type):
+        if not type in [self.TYPE_ABSOLUTE, self.TYPE_COORDINATE, self.TYPE_RELATIVE]:
+            raise ValueError("unknown type")
 
-setup(
-    name='trinamic_pd110',
-    version=__import__('trinamic_pd110').__version__,
-    author='Alexander Book',
-    author_email='alexander.book@frm2.tum.de',
-    license = 'GNU General Public License (GPL), Version 3',
-    url='https://github.com/TUM-E21-ThinFilms/Trinamic-PD110/',
-    description=desc,
-    long_description=open('README.md').read(),
-    packages=find_packages(),
-    include_package_data=True,
-    install_requires=requires,
-)
+        self._msg.set_type(type)
+
+    def set_value(self, value):
+        self._msg.set_value(value)

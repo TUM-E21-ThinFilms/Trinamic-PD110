@@ -16,12 +16,12 @@
 import logging
 
 from slave.transport import Serial
-from protocol import TrinamicProtocol
-from driver import ShutterDriver
+from protocol import TrinamicPD110Protocol
+from driver import TrinamicPD110Driver
 
-class ADLSputterFactory:
+class TrinamicPD110Factory:
     def get_logger(self):
-        logger = logging.getLogger('Shutter')
+        logger = logging.getLogger('Trinamic PD-110 Shutter')
         logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         fh = logging.FileHandler('shutter.log')
@@ -34,6 +34,6 @@ class ADLSputterFactory:
         if logger is None:
             logger = self.get_logger()
 
-        protocol = TrinamicProtocol(logger=logger)
-        return ShutterDriver(Serial('/dev/ttyUSB16', 9600, 8, timeout=0.2), protocol)
+        protocol = TrinamicPD110Protocol(logger=logger)
+        return TrinamicPD110Driver(Serial(device, 9600, 8, 'N',timeout=0.2), protocol)
 
