@@ -79,6 +79,11 @@ class TrinamicPD110Protocol(Protocol):
     #        return [value]  # Has to be given as list (iterable...)
     #        # return response_value
 
+    def to_ascii(self, transport):
+        transport.write("".join(map(str, [1, 139, 0, 0, 0, 0, 0, 0, 140])))
+        response = transport.read(9)
+        print(response)
+
     def parse_response(self, raw_response):
         resp = Response()
         resp.read_response(raw_response)
