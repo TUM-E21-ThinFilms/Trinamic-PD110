@@ -1,15 +1,29 @@
+# Copyright (C) 2016, see AUTHORS.md
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from slave.driver import Driver, Command
 from slave.types import Integer
-import time
-from protocol import TrinamicProtocol
+from protocol import TrinamicPD110Protocol
 
-class ShutterDriver(Driver):
+class TrinamicPD110Driver(Driver):
 
     def __init__(self, transport, protocol=None):
         if protocol is None:
-            protocol = TrinamicProtocol()
+            protocol = TrinamicPD110Protocol()
 
-        super(ShutterDriver, self).__init__(transport, protocol)
+        super(TrinamicPD110Driver, self).__init__(transport, protocol)
 
         # Commands:
 
@@ -76,24 +90,3 @@ class ShutterDriver(Driver):
             return self.move_rel(rotate)
         except:
             pass
-
-    def sputter(self, sputter_time):
-        x = raw_input("Is the shutter closed? (yes/no) : ")
-        if x != "yes":
-            return 'Shutter: Command aborted!'
-        cmd = [4, 1, 0], Integer
-        try:
-            self.move(180)
-            #self._write(cmd, 12800 / 2)
-        except:
-            print("Exception...")
-
-        time.sleep(sputter_time)
-
-        try:
-            self.move(180)
-            #self._write(cmd, 12800 / 2)
-        except:
-            print("Exception....")
-
-        print('Shutter: Sputtered for ' + str(sputter_time) + ' seconds!')

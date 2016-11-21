@@ -15,7 +15,7 @@
 
 from slave.protocol import Protocol
 
-class TrinamicProtocol(Protocol):
+class TrinamicPD110Protocol(Protocol):
     def __init__(self, address=1, logger=None):
         self.address = address
         self.logger=None
@@ -60,8 +60,6 @@ class TrinamicProtocol(Protocol):
         response_value = []  # create response value list
         for i in range(0, 4):
             response_header.append(response[i])  # fill response header with information
-
-        # exceptions einfügen!! (checks für header correctness!!...)
 
         for i in range(4, 8):
             response_value.append(response[i])  # fill response value with information
