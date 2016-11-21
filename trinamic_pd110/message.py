@@ -17,7 +17,7 @@ import re
 
 class Message(object):
 
-    TERMINATOR = '\r'#
+    TERMINATOR = '\r'
     SPACE = ' '
 
     def __init__(self):
@@ -60,15 +60,14 @@ class Message(object):
         return self._address
 
     def set_value(self, value):
-        self._value = value
+        self._value = str(value)
 
     def get_value(self):
         return self._value
 
     def get_raw(self):
         # remove all empty values
-        parameters = ", ".join(filter(lambda x: x != "", [self._type, self._bank, self._value]))
-
+	parameters = ", ".join(filter(lambda x: x != "", [self._type, self._bank, self._value]))
         return "".join([self._address, self.SPACE, self._instruction, self.SPACE, parameters, self.TERMINATOR])
 
 class Response(object):
@@ -123,3 +122,6 @@ class AbstractMessage(object):
 
     def get_raw(self):
         return self._msg.get_raw()
+
+    def set_address(self, addr):
+        self._msg.set_address(addr)    

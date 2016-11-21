@@ -68,9 +68,12 @@ class TrinamicPD110Driver(Driver):
         cmd = [4, 0, 0], Integer  # Absolute movement
         return self._write(cmd, value)
 
-    def move_rel(self, value):
-        cmd = [4, 1, 0], Integer  # relative movement
-        return self._write(cmd, value)
+    def to_ascii(self):
+	self._protocol.to_ascii(self._transport)
+
+#    def move_rel(self, value):
+#       cmd = [4, 1, 0], Integer  # relative movement
+#      return self._write(cmd, value)
 
     def move_coord(self, value):
         cmd = [4, 2, 0], Integer  # move to coordinate

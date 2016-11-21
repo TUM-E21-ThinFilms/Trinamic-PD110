@@ -30,10 +30,10 @@ class TrinamicPD110Factory:
         logger.addHandler(fh)
         return logger
 
-    def create_sputter(self, device='/dev/ttyUSB16', logger=None):
+    def create_shutter(self, device='/dev/ttyUSB16', logger=None):
         if logger is None:
             logger = self.get_logger()
 
         protocol = TrinamicPD110Protocol(logger=logger)
-        return TrinamicPD110Driver(Serial(device, 9600, 8, 'N',timeout=0.2), protocol)
+        return TrinamicPD110Driver(Serial(device, 9600, 8, 'N',timeout=2), protocol)
 
