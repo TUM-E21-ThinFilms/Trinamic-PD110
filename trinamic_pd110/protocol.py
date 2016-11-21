@@ -14,38 +14,85 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from slave.protocol import Protocol
-from message import Message, AbstractMessage, Response
 
-class TrinamicPD110Protocol(Protocol):
-    def __init__(self, address='A', logger=None):
-        self.logger = logger
+class TrinamicProtocol(Protocol):
+    def __init__(self, address=1, logger=None):
         self.address = address
+        self.logger=None
 
-    def to_ascii(self, transport):
-        transport.write("".join(map(chr, [1, 139, 0, 0, 0, 0, 0, 0, 140])))
-        response = transport.read_bytes(9)
-        print(response)
+    def checksum(self, msg):
+        digit_sum = sum([i for i in msg])  # calculate digit sum from data
+        return digit_sum % 256  # format to digit sum modulo 256
 
-    def parse_response(self, raw_response):
-        resp = Response()
-        resp.read_response(raw_response)
-        return resp
+    def data_splitter(self, data_in):
+        data = []
+        data.extend(data_in)  # make data list (out of tuple)
+        if data == []:  # if data_in is None (No value was transmitted)
+            data = [0]
+        data[0] = int(data[0])  # convert data to integer
+        msg = []
+        if data[0] < 0:  # For negative inputs... First bit is sign bit
+            data[0] = (pow(2, 32) - data[0])
+        for x in range(0, 4):
+            msg.append(data[0] % 256)
+            data[0] /= 256
+            data[0] = int(data[0])
+        return msg[::-1]  # reversed bytearray
 
-    def query(self, transport, message):
-        if not isinstance(message, AbstractMessage):
-            raise TypeError('message must be an instance of AbstractMessage')
+    def create_message(self, header, *data):
+        msg = []
+        msg.append(self.address)
+        if header[0] == '[':
+            header = header[1:-1]
+            header = header.split(',')
+            for i in range(0, len(header)):
+                header[i] = int(header[i])
+        msg.extend(header)
+        msg.extend(self.data_splitter(data))
+        check = self.checksum(msg)  # get checksum
+        msg.append(check)  # adding checksum
+        # logger.debug('Created Message: "%s"', msg)
+        return bytearray(msg)
 
-        message.set_address(self.address)
-        raw_msg = message.get_raw()
+    def parse_response(self, response, header):
+        # logger.debug('Parse response: "%s"', response)
+        response_header = []  # create response header list
+        response_value = []  # create response value list
+        for i in range(0, 4):
+            response_header.append(response[i])  # fill response header with information
 
-        self.logger.debug("Sending message %s", repr(raw_msg))
-        transport.write(raw_msg)
-        response = transport.read_until(Message.TERMINATOR)
+        # exceptions einfügen!! (checks für header correctness!!...)
 
-        self.logger.debug("Read response %s", repr(response))
+        for i in range(4, 8):
+            response_value.append(response[i])  # fill response value with information
+        check = self.checksum(response[0:-1])  # create checksum
+        # if check != response[-1]:
+        #    raise ValueError('Shutter: Wrong response checksum!') # check checksum
+        value = 0  # calculate real response value
+        response_value = response_value[::-1]
+        for i in range(0, 4):
+            value += response_value[i] * pow(256, i)
+        if value > pow(2, 31):  # All values > pow (2,31) are negative (they have a positive sign bit)
+            value = pow(2, 32) - value
+        return [value]  # Has to be given as list (iterable...)
+        # return response_value
 
-        return self.parse_response(response)
+    # QUERY DOES NOT WORK YET!!
+    def query(self, transport, header, *data):
+        message = self.create_message(header, *data)
+        self.logger.debug('Shutter query message []: "%s"', [message])
+        with transport:
+            transport.write(message)
+            response = transport.read_bytes(9)  # reply has always 9 bytes
+        self.logger.debug('Shutter response []: "%s"', [response])
+        return self.parse_response(response, header)
 
-    def write(self, transport, message):
-        self.query(transport, message)
-
+    def write(self, transport, header, *data):
+        message = self.create_message(header, *data)
+        self.logger.debug('Shutter write []: "%s"', [message])
+        with transport:
+            transport.write(message)
+            #actually we dont get anything back...
+            #response = transport.read_bytes(9)
+        #self.logger.debug('Shutter response []: "%s"', [response])
+        #return self.parse_response(response, header)

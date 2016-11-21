@@ -1,17 +1,15 @@
 from slave.driver import Driver, Command
 from slave.types import Integer
 import time
-from protocol import TrinamicPD110Protocol
+from protocol import TrinamicProtocol
 
-from messages.mvp import MVPMessage
-
-class TrinamicPD110Driver(Driver):
+class ShutterDriver(Driver):
 
     def __init__(self, transport, protocol=None):
         if protocol is None:
-            protocol = TrinamicPD110Protocol()
+            protocol = TrinamicProtocol()
 
-        super(TrinamicPD110Driver, self).__init__(transport, protocol)
+        super(ShutterDriver, self).__init__(transport, protocol)
 
         # Commands:
 
@@ -42,15 +40,7 @@ class TrinamicPD110Driver(Driver):
             Integer
         )
 
-    def _query(self, message):
-        return self._protocol.query(self._transport, message)
-
         # Functions:
-    def move_rel(self, value):
-        msg = MVPMessage()
-        msg.set_type(MVPMessage.TYPE_RELATIVE)
-        msg.set_value(value)
-        return self._query(msg)
 
     def move_right(self, value):  # max_value = 500
         cmd = [1, 0, 0], Integer  # first entry: Instruction number, second entry: Type; third entry: Motor/Bank
@@ -68,12 +58,9 @@ class TrinamicPD110Driver(Driver):
         cmd = [4, 0, 0], Integer  # Absolute movement
         return self._write(cmd, value)
 
-    def to_ascii(self):
-	self._protocol.to_ascii(self._transport)
-
-#    def move_rel(self, value):
-#       cmd = [4, 1, 0], Integer  # relative movement
-#      return self._write(cmd, value)
+    def move_rel(self, value):
+        cmd = [4, 1, 0], Integer  # relative movement
+        return self._write(cmd, value)
 
     def move_coord(self, value):
         cmd = [4, 2, 0], Integer  # move to coordinate
@@ -83,9 +70,9 @@ class TrinamicPD110Driver(Driver):
         cmd = [6, 138, 0], Integer  # value = 0: position mode; value = 2: velocity mode
         return self._write(cmd, value)
 
-    def move(self, value=180):
+    def move(self, degree=180):
         try:
-            rotate = (12800 / 2) / 180 * value  # 12800/2 steps are half rotation
+            rotate = (12800 / 2) / 180 * degree  # 12800/2 steps are half rotation
             return self.move_rel(rotate)
         except:
             pass
