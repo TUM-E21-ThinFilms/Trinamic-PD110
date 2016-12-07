@@ -15,7 +15,7 @@
 
 from setuptools import setup, find_packages
 
-requires = ['slave']
+requires = ['slave', 'e21_util']
 
 desc = ('An implementation of the serial interface Trinamic PD-110 / TMCM-110')
 

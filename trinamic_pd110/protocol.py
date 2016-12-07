@@ -15,6 +15,9 @@
 
 from slave.protocol import Protocol
 
+import e21_util
+from e21_util.lock import InterProcessTransportLock
+
 class TrinamicPD110Protocol(Protocol):
     def __init__(self, address=1, logger=None):
         self.address = address
@@ -77,19 +80,21 @@ class TrinamicPD110Protocol(Protocol):
 
     # QUERY DOES NOT WORK YET!!
     def query(self, transport, header, *data):
-        message = self.create_message(header, *data)
-        self.logger.debug('Shutter query message []: "%s"', [message])
-        with transport:
-            transport.write(message)
-            response = transport.read_bytes(9)  # reply has always 9 bytes
-        self.logger.debug('Shutter response []: "%s"', [response])
-        return self.parse_response(response, header)
+        with InterProcessTransportLock(transport):
+            message = self.create_message(header, *data)
+            self.logger.debug('Shutter query message []: "%s"', [message])
+            with transport:
+                transport.write(message)
+                response = transport.read_bytes(9)  # reply has always 9 bytes
+            self.logger.debug('Shutter response []: "%s"', [response])
+            return self.parse_response(response, header)
 
     def write(self, transport, header, *data):
-        message = self.create_message(header, *data)
-        self.logger.debug('Shutter write []: "%s"', [message])
-        with transport:
-            transport.write(message)
+        with InterProcessTransportLock(transport):
+            message = self.create_message(header, *data)
+            self.logger.debug('Shutter write []: "%s"', [message])
+            with transport:
+                transport.write(message)
             #actually we dont get anything back...
             #response = transport.read_bytes(9)
         #self.logger.debug('Shutter response []: "%s"', [response])

@@ -15,7 +15,7 @@
 
 import logging
 
-from slave.transport import Serial
+from e21_util.transport import Serial
 from protocol import TrinamicPD110Protocol
 from driver import TrinamicPD110Driver
 
