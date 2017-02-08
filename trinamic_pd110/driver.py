@@ -86,7 +86,7 @@ class TrinamicPD110Driver(Driver):
 
     def move(self, degree=180):
         try:
-            rotate = (12800 / 2) / 180 * degree  # 12800/2 steps are half rotation
+            rotate = (25990 / 2) * degree / 360  # 25990 / 2 steps are full rotation
             return self.move_rel(rotate)
         except:
             pass
