@@ -21,7 +21,7 @@ from e21_util.lock import InterProcessTransportLock
 class TrinamicPD110Protocol(Protocol):
     def __init__(self, address=1, logger=None):
         self.address = address
-        self.logger=None
+        self.logger=logger
 
     def checksum(self, msg):
         digit_sum = sum([i for i in msg])  # calculate digit sum from data
