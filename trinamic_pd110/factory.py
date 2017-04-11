@@ -13,22 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
 from e21_util.transport import Serial
+from e21_util.logging import get_sputter_logger
 from protocol import TrinamicPD110Protocol
 from driver import TrinamicPD110Driver
 
 class TrinamicPD110Factory:
     def get_logger(self):
-        logger = logging.getLogger('Trinamic PD-110 Shutter')
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh = logging.FileHandler('shutter.log')
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-        return logger
+        return get_sputter_logger('Trinamic PD-110 Shutter', 'shutter.log')
 
     def create_shutter(self, device='/dev/ttyUSB16', logger=None):
         if logger is None:
