@@ -15,6 +15,7 @@
 
 from e21_util.transport import Serial
 from e21_util.log import get_sputter_logger
+from e21_util.ports import Ports
 from protocol import TrinamicPD110Protocol
 from driver import TrinamicPD110Driver
 
@@ -22,9 +23,12 @@ class TrinamicPD110Factory:
     def get_logger(self):
         return get_sputter_logger('Trinamic PD-110 Shutter', 'shutter.log')
 
-    def create_shutter(self, device='/dev/ttyUSB16', logger=None):
+    def create_shutter(self, device=None, logger=None):
         if logger is None:
             logger = self.get_logger()
+
+        if device is None:
+            device = Ports().get_port(Ports.DEVICE_SHUTTER)
 
         protocol = TrinamicPD110Protocol(logger=logger)
         return TrinamicPD110Driver(Serial(device, 9600, 8, 'N',timeout=2), protocol)
