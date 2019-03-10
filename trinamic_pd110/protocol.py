@@ -39,12 +39,13 @@ class TrinamicPD110Protocol(Loggable):
 
         raw_msg = message.get_raw()
 
-        self._logger.debug("Sending message {}".format(raw_msg))
+        self._logger.debug("Sending message '{}'".format(repr(raw_msg)))
         self._transport.write(raw_msg)
 
     def _read(self):
 
         raw_response = self._transport.read_bytes(BinaryResponse.RESPONSE_BYTES)
+        self._logger.debug("Received message '{}'".format(repr(raw_response)))
 
         return BinaryResponse.from_raw(raw_response)
 

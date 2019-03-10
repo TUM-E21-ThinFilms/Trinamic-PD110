@@ -59,7 +59,9 @@ class Parameter(object):
                   REFERENCING_SWITCH_SPEED, MIXED_DECAY_THRESHOLD, FREEWHEELING, STALL_DETECTION_THRESHOLD,
                   FULLSTEP_THRESHOLD, POWER_DOWN_DELAY]
 
-        VALIDATOR = lambda x: x in Parameter.AxisParameter._RANGE
+        @classmethod
+        def validate(cls, parameter):
+            return parameter in cls._RANGE
 
     class GlobalParameter(object):
         @staticmethod
@@ -97,9 +99,10 @@ class Parameter(object):
             assert id in cls._GPVAR_RANGE
             return (2, id)
 
-        VALIDATOR = lambda x: x in Parameter.GlobalParameter._RANGE or (
-                Parameter.GlobalParameter.get_bank(x) == 2 and (
-                Parameter.GlobalParameter.get_parameter(x) in Parameter.GlobalParameter._GPVAR_RANGE))
+        @classmethod
+        def validate(cls, parameter):
+            return (parameter in cls._RANGE) or (
+                        cls.get_bank(parameter) == 2 and cls.get_parameter(parameter) in cls._GPVAR_RANGE)
 
 
 class TrinamicPD110Driver(object):
@@ -120,37 +123,37 @@ class TrinamicPD110Driver(object):
         return self.execute(BinaryCommand(self._addr, 4, type, 0, pos))
 
     def set_axis_parameter(self, parameter_number, value):
-        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        assert Parameter.AxisParameter.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 5, parameter_number, 0, value))
 
     def get_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        assert Parameter.AxisParameter.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 6, parameter_number, BinaryCommand.IGNORE))
 
     def store_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        assert Parameter.AxisParameter.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 7, parameter_number, BinaryCommand.IGNORE))
 
     def restore_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        assert Parameter.AxisParameter.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 8, parameter_number, BinaryCommand.IGNORE))
 
     def set_global_parameter(self, parameter, value):
-        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        assert Parameter.GlobalParameter.validate(parameter)
         return self.execute(BinaryCommand(self._addr, 9, Parameter.GlobalParameter.get_parameter(parameter),
                                           Parameter.GlobalParameter.get_bank(parameter), value))
 
     def get_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        assert Parameter.GlobalParameter.validate(parameter)
         return self.execute(BinaryCommand(self._addr, 10, Parameter.GlobalParameter.get_parameter(parameter),
                                           Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
 
     def store_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        assert Parameter.GlobalParameter.validate(parameter)
         return self.execute(BinaryCommand(self._addr, 11, Parameter.GlobalParameter.get_parameter(parameter),
                                           Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
 
     def restore_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        assert Parameter.GlobalParameter.validate(parameter)
         return self.execute(BinaryCommand(self._addr, 12, Parameter.GlobalParameter.get_parameter(parameter),
                                           Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
