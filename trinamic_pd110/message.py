@@ -24,6 +24,13 @@ class AbstractMessage(object):
     def _parse_value(cls, value):
         return [(value & 0xFF000000), (value & 0x00FF0000), (value & 0x0000FF00), (value & 0x000000FF)]
 
+    @classmethod
+    def _generate_value(cls, value_array):
+        return (value_array[0] << 3 * 8) | (value_array[1] << 2 * 8) | (value_array[2] << 1 * 8) | value_array[3]
+
+    def get_value(self):
+        return self._generate_value(self._value)
+
 class BinaryCommand(AbstractMessage):
     IGNORE = 0
 
@@ -70,7 +77,7 @@ class BinaryResponse(AbstractMessage):
         mod  = raw_data[1]
         stat = raw_data[2]
         cmd  = raw_data[3]
-        val  = (raw_data[4] << 3*8) | (raw_data[5] << 2*8) | (raw_data[6] << 1*8) | raw_data[7]
+        val  = cls._generate_value(raw_message[4:8])
         chk  = raw_data[8]
 
         return cls(addr, mod, stat, cmd, val, chk)

@@ -25,7 +25,7 @@ class Parameter(object):
 
         VALIDATOR = [ABSOLUTE, RELATIVE, COORDINATE]
 
-    class AxisParameter(object):
+    class Axis(object):
         TARGET_POSITION = 0
         ACTUAL_POSITION = 1
         TARGET_SPEED = 2
@@ -63,7 +63,7 @@ class Parameter(object):
         def validate(cls, parameter):
             return parameter in cls._RANGE
 
-    class GlobalParameter(object):
+    class Global(object):
         @staticmethod
         def get_parameter(parameter):
             return parameter[1]
@@ -123,37 +123,37 @@ class TrinamicPD110Driver(object):
         return self.execute(BinaryCommand(self._addr, 4, type, 0, pos))
 
     def set_axis_parameter(self, parameter_number, value):
-        assert Parameter.AxisParameter.validate(parameter_number)
+        assert Parameter.Axis.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 5, parameter_number, 0, value))
 
     def get_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.validate(parameter_number)
+        assert Parameter.Axis.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 6, parameter_number, BinaryCommand.IGNORE))
 
     def store_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.validate(parameter_number)
+        assert Parameter.Axis.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 7, parameter_number, BinaryCommand.IGNORE))
 
     def restore_axis_parameter(self, parameter_number):
-        assert Parameter.AxisParameter.validate(parameter_number)
+        assert Parameter.Axis.validate(parameter_number)
         return self.execute(BinaryCommand(self._addr, 8, parameter_number, BinaryCommand.IGNORE))
 
     def set_global_parameter(self, parameter, value):
-        assert Parameter.GlobalParameter.validate(parameter)
-        return self.execute(BinaryCommand(self._addr, 9, Parameter.GlobalParameter.get_parameter(parameter),
-                                          Parameter.GlobalParameter.get_bank(parameter), value))
+        assert Parameter.Global.validate(parameter)
+        return self.execute(BinaryCommand(self._addr, 9, Parameter.Global.get_parameter(parameter),
+                                          Parameter.Global.get_bank(parameter), value))
 
     def get_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.validate(parameter)
-        return self.execute(BinaryCommand(self._addr, 10, Parameter.GlobalParameter.get_parameter(parameter),
-                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
+        assert Parameter.Global.validate(parameter)
+        return self.execute(BinaryCommand(self._addr, 10, Parameter.Global.get_parameter(parameter),
+                                          Parameter.Global.get_bank(parameter), BinaryCommand.IGNORE))
 
     def store_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.validate(parameter)
-        return self.execute(BinaryCommand(self._addr, 11, Parameter.GlobalParameter.get_parameter(parameter),
-                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
+        assert Parameter.Global.validate(parameter)
+        return self.execute(BinaryCommand(self._addr, 11, Parameter.Global.get_parameter(parameter),
+                                          Parameter.Global.get_bank(parameter), BinaryCommand.IGNORE))
 
     def restore_global_parameter(self, parameter):
-        assert Parameter.GlobalParameter.validate(parameter)
-        return self.execute(BinaryCommand(self._addr, 12, Parameter.GlobalParameter.get_parameter(parameter),
-                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
+        assert Parameter.Global.validate(parameter)
+        return self.execute(BinaryCommand(self._addr, 12, Parameter.Global.get_parameter(parameter),
+                                          Parameter.Global.get_bank(parameter), BinaryCommand.IGNORE))
