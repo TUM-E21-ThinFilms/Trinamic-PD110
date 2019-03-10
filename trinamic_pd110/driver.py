@@ -102,7 +102,7 @@ class Parameter(object):
         @classmethod
         def validate(cls, parameter):
             return (parameter in cls._RANGE) or (
-                        cls.get_bank(parameter) == 2 and cls.get_parameter(parameter) in cls._GPVAR_RANGE)
+                    cls.get_bank(parameter) == 2 and cls.get_parameter(parameter) in cls._GPVAR_RANGE)
 
 
 class TrinamicPD110Driver(object):
@@ -115,28 +115,29 @@ class TrinamicPD110Driver(object):
         return self._protocol.execute(msg)
 
     def stop(self):
-        return self.execute(BinaryCommand(self._addr, 3, BinaryCommand.IGNORE, 0, BinaryCommand.IGNORE))
+        return self.execute(
+            BinaryCommand(self._addr, 3, BinaryCommand.IGNORE, BinaryCommand.IGNORE, BinaryCommand.IGNORE))
 
     def move(self, pos, type=Parameter.Move.RELATIVE):
         assert (type in Parameter.Move.VALIDATOR)
 
-        return self.execute(BinaryCommand(self._addr, 4, type, 0, pos))
+        return self.execute(BinaryCommand(self._addr, 4, type, BinaryCommand.IGNORE, pos))
 
     def set_axis_parameter(self, parameter_number, value):
         assert Parameter.Axis.validate(parameter_number)
-        return self.execute(BinaryCommand(self._addr, 5, parameter_number, 0, value))
+        return self.execute(BinaryCommand(self._addr, 5, parameter_number, BinaryCommand.IGNORE, value))
 
     def get_axis_parameter(self, parameter_number):
         assert Parameter.Axis.validate(parameter_number)
-        return self.execute(BinaryCommand(self._addr, 6, parameter_number, BinaryCommand.IGNORE))
+        return self.execute(BinaryCommand(self._addr, 6, parameter_number, BinaryCommand.IGNORE, BinaryCommand.IGNORE))
 
     def store_axis_parameter(self, parameter_number):
         assert Parameter.Axis.validate(parameter_number)
-        return self.execute(BinaryCommand(self._addr, 7, parameter_number, BinaryCommand.IGNORE))
+        return self.execute(BinaryCommand(self._addr, 7, parameter_number, BinaryCommand.IGNORE, BinaryCommand.IGNORE))
 
     def restore_axis_parameter(self, parameter_number):
         assert Parameter.Axis.validate(parameter_number)
-        return self.execute(BinaryCommand(self._addr, 8, parameter_number, BinaryCommand.IGNORE))
+        return self.execute(BinaryCommand(self._addr, 8, parameter_number, BinaryCommand.IGNORE, BinaryCommand.IGNORE))
 
     def set_global_parameter(self, parameter, value):
         assert Parameter.Global.validate(parameter)
