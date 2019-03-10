@@ -22,7 +22,7 @@ class AbstractMessage(object):
 
     @classmethod
     def _parse_value(cls, value):
-        return [(value & 0xFF000000), (value & 0x00FF0000), (value & 0x0000FF00), (value & 0x000000FF)]
+        return [(value >> 3*8) & 0xFF, (value >> 2*8) & 0xFF, (value >> 1*8) & 0xFF, value & 0xFF]
 
     @classmethod
     def _generate_value(cls, value_array):
