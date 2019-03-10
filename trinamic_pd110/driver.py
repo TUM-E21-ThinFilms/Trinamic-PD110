@@ -105,7 +105,7 @@ class Parameter(object):
 class TrinamicPD110Driver(object):
     def __init__(self, protocol, address=1):
         assert isinstance(protocol, TrinamicPD110Protocol)
-        self._addr = address
+        self._addr = address & 0xFF
         self._protocol = protocol
 
     def execute(self, msg):

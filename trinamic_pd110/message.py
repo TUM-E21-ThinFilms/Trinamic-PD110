@@ -63,7 +63,7 @@ class BinaryResponse(AbstractMessage):
     def from_raw(cls, raw_data):
         assert isinstance(raw_data, bytearray)
 
-        if not len(raw_data) == self.RESPONSE_BYTES:
+        if not len(raw_data) == cls.RESPONSE_BYTES:
             raise RuntimeError("input length must be 9")
 
         addr = raw_data[0]

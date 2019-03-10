@@ -16,13 +16,15 @@
 from e21_util.transport import Serial
 from e21_util.log import get_sputter_logger
 from e21_util.ports import Ports
-from protocol import TrinamicPD110Protocol
-from driver import TrinamicPD110Driver
+
+from trinamic_pd110.protocol import TrinamicPD110Protocol
+from trinamic_pd110.driver import TrinamicPD110Driver
 
 class TrinamicPD110Factory(object):
+
     @staticmethod
     def create(transport, logger):
-        return TrinamicPD110Driver(TrinamicPD110Protocol(transport, logger), logger)
+        return TrinamicPD110Driver(TrinamicPD110Protocol(transport, logger))
 
     def get_logger(self):
         return get_sputter_logger('Trinamic PD-110 Shutter', 'shutter.log')
