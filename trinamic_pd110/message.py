@@ -70,7 +70,7 @@ class BinaryResponse(AbstractMessage):
         mod  = raw_data[1]
         stat = raw_data[2]
         cmd  = raw_data[3]
-        val  = raw_data[4:8]
+        val  = (raw_data[4] << 3*8) | (raw_data[5] << 2*8) | (raw_data[6] << 1*8) | raw_data[7]
         chk  = raw_data[8]
 
         return cls(addr, mod, stat, cmd, val, chk)
