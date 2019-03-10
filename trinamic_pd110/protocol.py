@@ -18,6 +18,7 @@ from e21_util.serial_connection import AbstractTransport, SerialTimeoutException
 
 from trinamic_pd110.message import BinaryCommand, BinaryResponse
 
+
 class TrinamicPD110Protocol(Loggable):
     def __init__(self, transport, logger):
         super(TrinamicPD110Protocol, self).__init__(logger)
@@ -35,7 +36,6 @@ class TrinamicPD110Protocol(Loggable):
 
     def _write(self, message):
         assert isinstance(message, BinaryCommand)
-
 
         raw_msg = message.get_raw()
 

@@ -66,6 +66,12 @@ class BinaryResponse(AbstractMessage):
         if not checksum == self._checksum:
             raise RuntimeError("Checksum mismatch")
 
+    def get_status(self):
+        return self._status
+
+    def is_successful(self):
+        return self._status == Status.SUCCESS or self._status == Status.CMD_LOADED
+
     @classmethod
     def from_raw(cls, raw_data):
         assert isinstance(raw_data, bytearray)

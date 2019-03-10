@@ -100,6 +100,10 @@ class Parameter(object):
             return (2, id)
 
         @classmethod
+        def GPVAR(cls, id):
+            return cls.GENERAL_PURPOSE_VARIABLE(id)
+
+        @classmethod
         def validate(cls, parameter):
             return (parameter in cls._RANGE) or (
                     cls.get_bank(parameter) == 2 and cls.get_parameter(parameter) in cls._GPVAR_RANGE)
@@ -110,6 +114,9 @@ class TrinamicPD110Driver(object):
         assert isinstance(protocol, TrinamicPD110Protocol)
         self._addr = address & 0xFF
         self._protocol = protocol
+
+    def clear(self):
+        self._protocol.clear()
 
     def execute(self, msg):
         return self._protocol.execute(msg)
@@ -158,3 +165,9 @@ class TrinamicPD110Driver(object):
         assert Parameter.Global.validate(parameter)
         return self.execute(BinaryCommand(self._addr, 12, Parameter.Global.get_parameter(parameter),
                                           Parameter.Global.get_bank(parameter), BinaryCommand.IGNORE))
+
+    def lock_eeprom(self):
+        self.set_global_parameter(Parameter.Global.EEPROM_LOCK_FLAG, 1234)
+
+    def unlock_eeprom(self):
+        self.set_global_parameter(Parameter.Global.EEPROM_LOCK_FLAG, 4321)
