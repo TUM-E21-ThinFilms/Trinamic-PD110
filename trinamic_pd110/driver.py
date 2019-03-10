@@ -13,80 +13,144 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from slave.driver import Driver, Command
-from slave.types import Integer
-from protocol import TrinamicPD110Protocol
+from trinamic_pd110.protocol import TrinamicPD110Protocol
+from trinamic_pd110.message import BinaryCommand
 
-class TrinamicPD110Driver(Driver):
 
-    def __init__(self, transport, protocol=None):
-        if protocol is None:
-            protocol = TrinamicPD110Protocol()
+class Parameter(object):
+    class Move(object):
+        ABSOLUTE = 0
+        RELATIVE = 1
+        COORDINATE = 2
 
-        super(TrinamicPD110Driver, self).__init__(transport, protocol)
+        VALIDATOR = [ABSOLUTE, RELATIVE, COORDINATE]
 
-        # Commands:
+    class AxisParameter(object):
+        TARGET_POSITION = 0
+        ACTUAL_POSITION = 1
+        TARGET_SPEED = 2
+        ACTUAL_SPEED = 3
+        MAX_POSITIONING_SPEED = 4
+        MAX_ACCELERATION = 5
+        MAX_ABSOLUTE_CURRENT = 6
+        STANDBY_CURRENT = 7
+        RIGHT_LIMIT_SWITCH_DISABLE = 12
+        LEFT_LIMIT_SWITCH_DISABLE = 13
+        MIN_SPEED = 130
+        RAMP_MODE = 138
+        MICROSTEP_RESOLUTION = 140
+        REF_SWITCH_TOLERANCE = 141
+        SOFT_STOP_FLAG = 149
+        RAMP_DIVISOR = 153
+        PULSE_DIVISOR = 154
+        REFERENCING_MODE = 193
+        REFERENCING_SEARCH_SPEED = 194
+        REFERENCING_SWITCH_SPEED = 195
+        MIXED_DECAY_THRESHOLD = 203
+        FREEWHEELING = 204
+        STALL_DETECTION_THRESHOLD = 205
+        FULLSTEP_THRESHOLD = 211
+        POWER_DOWN_DELAY = 214
 
-        self.position = Command(  # Command: def __init__(self, query=None, write=None, type_=None, protocol=None):
-            '[6,1,0]',  # query
-            '[5,0,0]',  # write
-            Integer
-        )
+        _RANGE = [TARGET_POSITION, ACTUAL_POSITION, TARGET_SPEED, ACTUAL_SPEED, MAX_POSITIONING_SPEED,
+                  MAX_ACCELERATION, MAX_ABSOLUTE_CURRENT, STANDBY_CURRENT, RIGHT_LIMIT_SWITCH_DISABLE,
+                  LEFT_LIMIT_SWITCH_DISABLE, MIN_SPEED, RAMP_MODE, MICROSTEP_RESOLUTION, REF_SWITCH_TOLERANCE,
+                  SOFT_STOP_FLAG, RAMP_DIVISOR, PULSE_DIVISOR, REFERENCING_MODE, REFERENCING_SEARCH_SPEED,
+                  REFERENCING_SWITCH_SPEED, MIXED_DECAY_THRESHOLD, FREEWHEELING, STALL_DETECTION_THRESHOLD,
+                  FULLSTEP_THRESHOLD, POWER_DOWN_DELAY]
 
-        self.speed_max = Command(
-            '[6,4,0]',  # query
-            '[5,4,0]',  # write
-            # [Integer,Integer,Integer,Integer]
-            Integer
-        )
+        VALIDATOR = lambda x: x in Parameter.AxisParameter._RANGE
 
-        self.speed = Command(
-            '[6,3,0]',  # query
-            '[5,2,0]',  # write
-            # [Integer,Integer,Integer,Integer]
-            Integer
-        )
+    class GlobalParameter(object):
+        @staticmethod
+        def get_parameter(parameter):
+            return parameter[1]
 
-        self.acceleration = Command(
-            '[6,5,0]',  # query
-            '[5,5,0]',  # write
-            # [Integer,Integer,Integer,Integer]
-            Integer
-        )
+        @staticmethod
+        def get_bank(parameter):
+            return parameter[0]
 
-        # Functions:
+        EEPROM_MAGIC = (0, 64)
+        RS232_BAUD_RATE = (0, 65)
+        RS232_SERIAL_ADDRESS = (0, 66)
+        ASCII_MODE = (0, 67)
+        CAN_BIT_RATE = (0, 69)
+        CAN_REPLY_ID = (0, 70)
+        CAN_ID = (0, 71)
+        EEPROM_LOCK_FLAG = (0, 73)
+        TELEGRAM_PAUSE_TIME = (0, 75)
+        SERIAL_HOST_ADDRESS = (0, 76)
+        AUTO_START_MODE = (0, 77)
+        SHUTDOWN_PIN_FUNCTIONALITY = (0, 80)
+        TMCL_CODE_PROTECTION = (0, 81)
+        CAN_SECONDARY_ADDRESS = (0, 83)
+        TICK_TIMER = (0, 132)
 
-    def move_right(self, value):  # max_value = 500
-        cmd = [1, 0, 0], Integer  # first entry: Instruction number, second entry: Type; third entry: Motor/Bank
-        return self._write(cmd, value)
+        _RANGE = [EEPROM_MAGIC, RS232_BAUD_RATE, RS232_SERIAL_ADDRESS, ASCII_MODE, CAN_BIT_RATE, CAN_REPLY_ID, CAN_ID,
+                  EEPROM_LOCK_FLAG, TELEGRAM_PAUSE_TIME, SERIAL_HOST_ADDRESS, AUTO_START_MODE,
+                  SHUTDOWN_PIN_FUNCTIONALITY, TMCL_CODE_PROTECTION, CAN_SECONDARY_ADDRESS, TICK_TIMER]
 
-    def move_left(self, value):
-        cmd = [2, 0, 0], Integer
-        return self._write(cmd, value)
+        _GPVAR_RANGE = range(0, 55 + 1)
+
+        @classmethod
+        def GENERAL_PURPOSE_VARIABLE(cls, id):
+            assert id in cls._GPVAR_RANGE
+            return (2, id)
+
+        VALIDATOR = lambda x: x in Parameter.GlobalParameter._RANGE or (
+                Parameter.GlobalParameter.get_bank(x) == 2 and (
+                Parameter.GlobalParameter.get_parameter(x) in Parameter.GlobalParameter._GPVAR_RANGE))
+
+
+class TrinamicPD110Driver(object):
+    def __init__(self, protocol, address=1):
+        assert isinstance(protocol, TrinamicPD110Protocol)
+        self._addr = address
+        self._protocol = protocol
+
+    def execute(self, msg):
+        return self._protocol.execute(msg)
 
     def stop(self):
-        cmd = [1, 3, 0], Integer  # Motor stop
-        return self._write(cmd, 0)
+        return self.execute(BinaryCommand(self._addr, 3, BinaryCommand.IGNORE, 0, BinaryCommand.IGNORE))
 
-    def move_abs(self, value):
-        cmd = [4, 0, 0], Integer  # Absolute movement
-        return self._write(cmd, value)
+    def move(self, pos, type=Parameter.Move.RELATIVE):
+        assert (type in Parameter.Move.VALIDATOR)
 
-    def move_rel(self, value):
-        cmd = [4, 1, 0], Integer  # relative movement
-        return self._write(cmd, value)
+        return self.execute(BinaryCommand(self._addr, 4, type, 0, pos))
 
-    def move_coord(self, value):
-        cmd = [4, 2, 0], Integer  # move to coordinate
-        return self._write(cmd, value)
+    def set_axis_parameter(self, parameter_number, value):
+        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        return self.execute(BinaryCommand(self._addr, 5, parameter_number, 0, value))
 
-    def mode(self, value):
-        cmd = [6, 138, 0], Integer  # value = 0: position mode; value = 2: velocity mode
-        return self._write(cmd, value)
+    def get_axis_parameter(self, parameter_number):
+        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        return self.execute(BinaryCommand(self._addr, 6, parameter_number, BinaryCommand.IGNORE))
 
-    def move(self, degree=180):
-        try:
-            rotate = 12800 * degree / 360  # 25990 / 2 steps are full rotation
-            return self.move_rel(rotate)
-        except:
-            pass
+    def store_axis_parameter(self, parameter_number):
+        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        return self.execute(BinaryCommand(self._addr, 7, parameter_number, BinaryCommand.IGNORE))
+
+    def restore_axis_parameter(self, parameter_number):
+        assert Parameter.AxisParameter.VALIDATOR(parameter_number)
+        return self.execute(BinaryCommand(self._addr, 8, parameter_number, BinaryCommand.IGNORE))
+
+    def set_global_parameter(self, parameter, value):
+        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        return self.execute(BinaryCommand(self._addr, 9, Parameter.GlobalParameter.get_parameter(parameter),
+                                          Parameter.GlobalParameter.get_bank(parameter), value))
+
+    def get_global_parameter(self, parameter):
+        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        return self.execute(BinaryCommand(self._addr, 10, Parameter.GlobalParameter.get_parameter(parameter),
+                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
+
+    def store_global_parameter(self, parameter):
+        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        return self.execute(BinaryCommand(self._addr, 11, Parameter.GlobalParameter.get_parameter(parameter),
+                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))
+
+    def restore_global_parameter(self, parameter):
+        assert Parameter.GlobalParameter.VALIDATOR(parameter)
+        return self.execute(BinaryCommand(self._addr, 12, Parameter.GlobalParameter.get_parameter(parameter),
+                                          Parameter.GlobalParameter.get_bank(parameter), BinaryCommand.IGNORE))

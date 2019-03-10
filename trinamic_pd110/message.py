@@ -15,6 +15,76 @@
 
 import re
 
+class AbstractMessage(object):
+    @classmethod
+    def compute_checksum(cls, raw_msg):
+        return sum([i for i in raw_msg]) & 0xFF
+
+    @classmethod
+    def _parse_value(cls, value):
+        return [(value & 0xFF000000), (value & 0x00FF0000), (value & 0x0000FF00), (value & 0x000000FF)]
+
+class BinaryCommand(AbstractMessage):
+    IGNORE = 0
+
+    def __init__(self, module_address, cmd_id, type_number, motor_or_bank_number, value):
+        self._addr = module_address & 0xFF
+        self._cmd = cmd_id & 0xFF
+        self._type = type_number & 0xFF
+        self._motor = motor_or_bank_number & 0xFF
+        self._value = self._parse_value(value & 0xFFFFFFFF) # 4 bytes
+
+    def get_raw(self):
+        raw_msg = [self._addr, self._cmd, self._type, self._motor] + self._value
+        checksum = self.compute_checksum(raw_msg)
+        return bytearray(raw_msg + [checksum])
+
+class BinaryResponse(AbstractMessage):
+    RESPONSE_BYTES = 9
+
+    def __init__(self, reply_address, module_address, status, cmd_id, value, checksum):
+        self._addr = reply_address & 0xFF
+        self._module = module_address & 0xFF
+        self._status = status & 0xFF
+        self._cmd = cmd_id & 0xFF
+        self._value = self._parse_value(value & 0xFFFFFFFF) # 4 bytes
+        self._checksum = checksum & 0xFF
+
+        self._check_checksum()
+
+    def _check_checksum(self):
+        raw = [self._addr, self._module, self._status, self._cmd] + self._value
+        checksum = self.compute_checksum(raw)
+
+        if not checksum == self._checksum:
+            raise RuntimeError("Checksum mismatch")
+
+    @classmethod
+    def from_raw(cls, raw_data):
+        assert isinstance(raw_data, bytearray)
+
+        if not len(raw_data) == self.RESPONSE_BYTES:
+            raise RuntimeError("input length must be 9")
+
+        addr = raw_data[0]
+        mod  = raw_data[1]
+        stat = raw_data[2]
+        cmd  = raw_data[3]
+        val  = raw_data[4:8]
+        chk  = raw_data[8]
+
+        return cls(addr, mod, stat, cmd, val, chk)
+
+class Status(object):
+    SUCCESS = 100
+    CMD_LOADED = 101
+    CHECKSUM_WRONG = 1
+    COMMAND_INVALID = 2
+    TYPE_WRONG = 3
+    VALUE_INVALID = 4
+    EEPROM_LOCKED = 5
+    COMMAND_UNAVAILABLE = 6
+
 class Message(object):
 
     TERMINATOR = '\r'
@@ -67,7 +137,7 @@ class Message(object):
 
     def get_raw(self):
         # remove all empty values
-	parameters = ", ".join(filter(lambda x: x != "", [self._type, self._bank, self._value]))
+        parameters = ", ".join(filter(lambda x: x != "", [self._type, self._bank, self._value]))
         return "".join([self._address, self.SPACE, self._instruction, self.SPACE, parameters, self.TERMINATOR])
 
 class Response(object):

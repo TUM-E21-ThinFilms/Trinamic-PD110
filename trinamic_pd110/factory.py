@@ -19,7 +19,11 @@ from e21_util.ports import Ports
 from protocol import TrinamicPD110Protocol
 from driver import TrinamicPD110Driver
 
-class TrinamicPD110Factory:
+class TrinamicPD110Factory(object):
+    @staticmethod
+    def create(transport, logger):
+        return TrinamicPD110Driver(TrinamicPD110Protocol(transport, logger), logger)
+
     def get_logger(self):
         return get_sputter_logger('Trinamic PD-110 Shutter', 'shutter.log')
 
@@ -31,5 +35,5 @@ class TrinamicPD110Factory:
             device = Ports().get_port(Ports.DEVICE_SHUTTER)
 
         protocol = TrinamicPD110Protocol(logger=logger)
-        return TrinamicPD110Driver(Serial(device, 9600, 8, 'N',timeout=2), protocol)
+        return TrinamicPD110Driver(Serial(device, 9600, 8, 'N', timeout=2), protocol)
 
